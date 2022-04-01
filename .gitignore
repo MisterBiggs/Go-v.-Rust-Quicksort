@@ -1,3 +1,5 @@
 target/
 debug/
 rust/Cargo.lock
+data_generation/Cargo.lock
+data/

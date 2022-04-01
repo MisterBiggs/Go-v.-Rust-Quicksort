@@ -89,7 +89,7 @@ func Qsort(s []int) {
 
 func main() {
 
-	sortSize := 1000000
+	sortSize := 50000000
 	// MAXGOROUTINES := 1
 	unsorted := make([]int, 0, sortSize)
 
@@ -103,7 +103,7 @@ func main() {
 
 	// MAXGOROUTINES = 1
 	start = time.Now()
-	unsorted = rand.Perm(sortSize)
+	// unsorted = rand.Perm(sortSize)
 	Cqsort(unsorted, 1)
 	duration = time.Since(start)
 
