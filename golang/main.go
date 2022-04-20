@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"math/rand"
+	"os"
 	"time"
 )
-
-// var MAXGOROUTINES = 10000
 
 func Cqsort(s []int, MAXGOROUTINES int) {
 	if len(s) <= 1 {
@@ -77,34 +77,42 @@ func pickPivot(s []int) (pivotIdx int, pivot int) {
 	return
 }
 
-func Qsort(s []int) {
-	if len(s) <= 1 {
-		return
-	}
-	pivotIdx := partition(s)
-	Qsort(s[:pivotIdx+1])
-	Qsort(s[pivotIdx+1:])
-	return
-}
-
 func main() {
 
-	sortSize := 50000000
-	// MAXGOROUTINES := 1
-	unsorted := make([]int, 0, sortSize)
+	file, err := os.Open("data/perm50e6.txt")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
-	// MAXGOROUTINES = 100000
+	var perline int
+	var nums1 []int
+	var nums2 []int
+	fmt.Println("Reading File:...")
+	for {
+		_, err := fmt.Fscanf(file, "%d\n", &perline) // give a patter to scan
+
+		if err != nil {
+
+			if err == io.EOF {
+				break // stop reading the file
+			}
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		nums1 = append(nums1, perline)
+		nums2 = append(nums2, perline)
+	}
+	fmt.Println("Sorting!")
+
 	start := time.Now()
-	unsorted = rand.Perm(sortSize)
-	Cqsort(unsorted, 8)
+	Cqsort(nums1, 16)
 	duration := time.Since(start)
 
 	fmt.Println("goroutines", duration)
 
-	// MAXGOROUTINES = 1
 	start = time.Now()
-	// unsorted = rand.Perm(sortSize)
-	Cqsort(unsorted, 1)
+	Cqsort(nums2, 1)
 	duration = time.Since(start)
 
 	fmt.Println(duration)
