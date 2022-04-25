@@ -1,8 +1,0 @@
-(define mycount
-  (lambda (x lst)
-      (cond ((null? lst) 0)
-              ((= x (car lst)) (+ 1 (mycount x (cdr lst))))
-            (else (mycount x (cdr lst))))))
-
-;(mycount 5 '((5 2) (2 (4 2) 6) 2))
-(mycount 3 '(1 2 3 4 3 2 3))
