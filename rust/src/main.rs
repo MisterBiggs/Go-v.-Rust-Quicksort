@@ -3,7 +3,8 @@
 use rayon::join;
 
 fn choose_pivot<T: Ord>(slice: &[T]) -> usize {
-    let (mut left, mid, mut right) = (0, slice.len() / 2, slice.len() - 1);
+    let (mut left, mid, mut right) =
+        (0, slice.len() / 2, slice.len() - 1);
     if slice[right] < slice[left] {
         std::mem::swap(&mut right, &mut left);
     }
@@ -16,7 +17,10 @@ fn choose_pivot<T: Ord>(slice: &[T]) -> usize {
     }
 }
 
-fn partition<T: Ord>(slice: &mut [T], pivot: usize) -> usize {
+fn partition<T: Ord>(
+    slice: &mut [T],
+    pivot: usize,
+) -> usize {
     let mid = slice.len() - 1;
     slice.swap(pivot, mid);
     let (mut left, mut right) = (0, mid - 1);
@@ -62,7 +66,8 @@ fn quicksort<T: Ord + std::marker::Send>(slice: &mut [T]) {
     }
 
     let pivot = partition(slice, choose_pivot(slice));
-    let (left_slice, right_slice) = slice.split_at_mut(pivot);
+    let (left_slice, right_slice) =
+        slice.split_at_mut(pivot);
 
     let right_slice = &mut right_slice[1..]; // want to exclude pivot
 
@@ -70,7 +75,9 @@ fn quicksort<T: Ord + std::marker::Send>(slice: &mut [T]) {
     quicksort(right_slice);
 }
 
-fn par_quicksort<T: Ord + std::marker::Send>(slice: &mut [T]) {
+fn par_quicksort<T: Ord + std::marker::Send>(
+    slice: &mut [T],
+) {
     if slice.len() <= 1 {
         return;
     } else if slice.len() == 2 {
@@ -81,30 +88,30 @@ fn par_quicksort<T: Ord + std::marker::Send>(slice: &mut [T]) {
     }
 
     let pivot = partition(slice, choose_pivot(slice));
-    let (left_slice, right_slice) = slice.split_at_mut(pivot);
+    let (left_slice, right_slice) =
+        slice.split_at_mut(pivot);
     let right_slice = &mut right_slice[1..]; // want to exclude pivot
 
-    join(|| quicksort(left_slice), || quicksort(right_slice));
+    join(
+        || quicksort(left_slice),
+        || quicksort(right_slice),
+    );
 }
 
-use rand::distributions::{Distribution, Uniform};
+use rand::prelude::SliceRandom;
 use rand::thread_rng;
 fn main() {
-    let mut s: Vec<i32> = Uniform::from(0..1_000_000_000)
-        .sample_iter(&mut thread_rng())
-        .take(100_000)
-        .collect();
+    let mut s = get_bench_vec();
 
     quicksort(&mut s);
+    par_quicksort(&mut s);
 }
 
 extern crate test;
 use test::Bencher;
 fn get_bench_vec() -> Vec<i32> {
-    let s = Uniform::from(0..1_000_000_000)
-        .sample_iter(&mut thread_rng())
-        .take(500_000)
-        .collect();
+    let mut s = (0..20000000).collect::<Vec<i32>>();
+    s.shuffle(&mut thread_rng());
     return s;
 }
 

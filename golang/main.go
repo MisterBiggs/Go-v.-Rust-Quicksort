@@ -21,7 +21,6 @@ func quicksort(slice []int) {
 }
 
 func par_quicksort(slice []int) {
-
 	if len(slice) <= 1 {
 		return
 	}
@@ -89,7 +88,6 @@ func choose_pivot(slice []int) int {
 	} else {
 		return mid
 	}
-
 }
 
 func swap(slice []int, a int, b int) {
@@ -103,18 +101,17 @@ func main() {
 	sortSize := 20000000
 	// MAXGOROUTINES := 1
 	unsorted := make([]int, 0, sortSize)
-	unsorted = rand.Perm(sortSize)
 
 	start := time.Now()
+	unsorted = rand.Perm(sortSize)
 	quicksort(unsorted)
 	duration := time.Since(start)
-	fmt.Println("single ", duration)
+	fmt.Println("Single Threaded: ", duration)
 
-	unsorted = rand.Perm(sortSize)
 	start = time.Now()
+	unsorted = rand.Perm(sortSize)
 	par_quicksort(unsorted)
 	duration = time.Since(start)
-
-	fmt.Println(duration)
+	fmt.Println("Concurrent: ", duration)
 
 }
