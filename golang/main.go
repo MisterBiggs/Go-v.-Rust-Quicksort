@@ -2,117 +2,117 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"math/rand"
-	"os"
 	"time"
 )
 
-func Cqsort(s []int, MAXGOROUTINES int) {
-	if len(s) <= 1 {
+func quicksort(slice []int) {
+
+	if len(slice) <= 1 {
 		return
 	}
-	workers := make(chan int, MAXGOROUTINES-1)
-	for i := 0; i < (MAXGOROUTINES - 1); i++ {
-		workers <- 1
-	}
-	cqsort(s, nil, workers)
+
+	pivot := partition(slice, choose_pivot(slice))
+	left := slice[0:pivot]
+	right := slice[pivot+1:]
+
+	quicksort(left)
+	quicksort(right)
 }
 
-func cqsort(s []int, done chan int, workers chan int) {
-	// report to caller that we're finished
-	if done != nil {
-		defer func() { done <- 1 }()
-	}
+func par_quicksort(slice []int) {
 
-	if len(s) <= 1 {
+	if len(slice) <= 1 {
 		return
 	}
-	// since we may use the doneChannel synchronously
-	// we need to buffer it so the synchronous code will
-	// continue executing and not block waiting for a read
-	doneChannel := make(chan int, 1)
 
-	pivotIdx := partition(s)
+	pivot := partition(slice, choose_pivot(slice))
+	left := slice[0:pivot]
+	right := slice[pivot+1:]
 
-	select {
-	case <-workers:
-		// if we have spare workers, use a goroutine
-		// for parallelization
-		go cqsort(s[:pivotIdx+1], doneChannel, workers)
-	default:
-		// if no spare workers, sort synchronously
-		cqsort(s[:pivotIdx+1], nil, workers)
-		// calling this here as opposed to using the defer
-		doneChannel <- 1
-	}
-	// use the existing goroutine to sort above the pivot
-	cqsort(s[pivotIdx+1:], nil, workers)
-	// if we used a goroutine we'll need to wait for
-	// the async signal on this channel, if not there
-	// will already be a value in the channel and it shouldn't block
-	<-doneChannel
-	return
+	go quicksort(left)
+	go quicksort(right)
 }
 
-func partition(s []int) (swapIdx int) {
-	pivotIdx, pivot := pickPivot(s)
-	// swap right-most element and pivot
-	s[len(s)-1], s[pivotIdx] = s[pivotIdx], s[len(s)-1]
-	// sort elements keeping track of pivot's idx
-	for i := 0; i < len(s)-1; i++ {
-		if s[i] < pivot {
-			s[i], s[swapIdx] = s[swapIdx], s[i]
-			swapIdx++
+func partition(slice []int, pivot int) int {
+	if len(slice) == 1 {
+		return 0
+	}
+
+	mid := len(slice) - 1
+	swap(slice, pivot, mid)
+	left := 0
+	right := mid - 1
+
+	for left < right {
+		if slice[left] <= slice[mid] {
+			left = left + 1
+		} else if slice[right] >= slice[mid] {
+			right = right - 1
+		} else {
+			swap(slice, left, right)
+			left = left + 1
+			right = right + 1
 		}
 	}
-	// swap pivot back to its place and return
-	s[swapIdx], s[len(s)-1] = s[len(s)-1], s[swapIdx]
-	return
+
+	if left > right {
+		swap(slice, left, mid)
+		return left
+	}
+
+	if slice[left] >= slice[mid] {
+		swap(slice, left, mid)
+		return left
+	} else if slice[left] <= slice[mid] {
+		swap(slice, left+1, mid)
+		return left + 1
+	}
+
+	panic("partition falied.")
 }
 
-func pickPivot(s []int) (pivotIdx int, pivot int) {
-	pivotIdx = rand.Intn(len(s))
-	pivot = s[pivotIdx]
-	return
+func choose_pivot(slice []int) int {
+	left := 0
+	mid := len(slice) / 2
+	right := len(slice) - 1
+
+	if slice[right] < slice[left] {
+		left, right = right, left
+	}
+
+	if slice[mid] <= slice[left] {
+		return left
+	} else if slice[right] <= slice[mid] {
+		return right
+
+	} else {
+		return mid
+	}
+
+}
+
+func swap(slice []int, a int, b int) {
+	if a <= len(slice) && b <= len(slice) {
+		slice[a], slice[b] = slice[b], slice[a]
+	}
 }
 
 func main() {
 
-	file, err := os.Open("data/perm50e6.txt")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	var perline int
-	var nums1 []int
-	var nums2 []int
-	fmt.Println("Reading File:...")
-	for {
-		_, err := fmt.Fscanf(file, "%d\n", &perline) // give a patter to scan
-
-		if err != nil {
-
-			if err == io.EOF {
-				break // stop reading the file
-			}
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		nums1 = append(nums1, perline)
-		nums2 = append(nums2, perline)
-	}
-	fmt.Println("Sorting!")
+	sortSize := 20000000
+	// MAXGOROUTINES := 1
+	unsorted := make([]int, 0, sortSize)
+	unsorted = rand.Perm(sortSize)
 
 	start := time.Now()
-	Cqsort(nums1, 16)
+	quicksort(unsorted)
 	duration := time.Since(start)
+	fmt.Println("single ", duration)
 
-	fmt.Println("goroutines", duration)
-
+	unsorted = rand.Perm(sortSize)
 	start = time.Now()
-	Cqsort(nums2, 1)
+	par_quicksort(unsorted)
 	duration = time.Since(start)
 
 	fmt.Println(duration)

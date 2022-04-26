@@ -17,14 +17,14 @@ fn choose_pivot<T: Ord>(slice: &[T]) -> usize {
 }
 
 fn partition<T: Ord>(slice: &mut [T], pivot: usize) -> usize {
-    let mxix = slice.len() - 1;
-    slice.swap(pivot, mxix);
-    let (mut left, mut right) = (0, mxix - 1);
+    let mid = slice.len() - 1;
+    slice.swap(pivot, mid);
+    let (mut left, mut right) = (0, mid - 1);
 
     while left < right {
-        if slice[left] <= slice[mxix] {
+        if slice[left] <= slice[mid] {
             left += 1;
-        } else if slice[right] >= slice[mxix] {
+        } else if slice[right] >= slice[mid] {
             right -= 1;
         } else {
             slice.swap(left, right);
@@ -35,16 +35,16 @@ fn partition<T: Ord>(slice: &mut [T], pivot: usize) -> usize {
 
     if left > right {
         // We just swapped the final two.
-        slice.swap(left, mxix);
+        slice.swap(left, mid);
         return left;
     }
 
     // Left and right met.
-    if slice[left] >= slice[mxix] {
-        slice.swap(left, mxix);
+    if slice[left] >= slice[mid] {
+        slice.swap(left, mid);
         return left;
-    } else if slice[left] <= slice[mxix] {
-        slice.swap(left + 1, mxix);
+    } else if slice[left] <= slice[mid] {
+        slice.swap(left + 1, mid);
         return left + 1;
     }
 
